@@ -4,7 +4,7 @@
 
 //import 'dart:html';
 import 'dart:io';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,6 +20,18 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  getUser() async {
+    User? firebaseUser = _auth.currentUser;
+    await firebaseUser?.reload();
+    firebaseUser = _auth.currentUser;
+  }
+   @override
+  void initState(){
+    super.initState();
+    this.getUser();
+  }
   FirebaseFirestore firestore = FirebaseFirestore.instance;
    List <XFile> fileImage=[];
    final picker = ImagePicker();
