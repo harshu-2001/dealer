@@ -36,14 +36,14 @@ class _MyAppState extends State<MyApp> {
    List <XFile> fileImage=[];
    final picker = ImagePicker();
    final _formKey = GlobalKey<FormState>();
-    late String _name;
+    var  _name;
     // ignore: unused_field
-    late String _category;
+    var _category;
     // ignore: unused_field
-    late String _quantity;
+    var _quantity;
     // ignore: unused_field
-    late String _price;
-    String productid=DateTime.now().millisecondsSinceEpoch.toString();
+    var _price;
+    var productid=DateTime.now().millisecondsSinceEpoch.toString()+DateTime.now().microsecond.toString();
     bool uploading=false,boli=false;
   @override
   Widget build(BuildContext context) {
@@ -144,7 +144,7 @@ class _MyAppState extends State<MyApp> {
   }
   capturewithcamera() async {
     Navigator.pop(context);
-    XFile? imageFile=await picker.pickImage(source:ImageSource.camera ,maxHeight: 680.0,maxWidth: 70.0 );
+    XFile? imageFile=await picker.pickImage(source:ImageSource.camera ,imageQuality: 50 );
     setState(() {
       fileImage.add(XFile(imageFile!.path));
       boli=true;
@@ -152,7 +152,7 @@ class _MyAppState extends State<MyApp> {
   }
   photofromgallery() async {
     Navigator.pop(context);
-    XFile? imageFile=await picker.pickImage(source:ImageSource.gallery ,maxHeight: 680.0,maxWidth: 70.0 );
+    XFile? imageFile=await picker.pickImage(source:ImageSource.gallery ,imageQuality: 50);
     setState(() {
       fileImage.add(XFile(imageFile!.path));
       boli=true;
@@ -360,26 +360,33 @@ class _MyAppState extends State<MyApp> {
     );
   }
   uploaddetails()async{
-   dynamic imageDownloadurl=uploaddetai(fileImage);
-    //saveItemInfo(imageDownloadurl);
-    saveItemInfo();
+   dynamic imageDownloadurl=await uploaddetai(fileImage);
+    saveItemInfo(imageDownloadurl);
+    //saveItemInfo();
   }
   Future<List<String>> uploaddetai(List<XFile> fileImag)async{
     var storageReference=firebase_storage.FirebaseStorage.instance.ref().child("items");
     firebase_storage.UploadTask uploadTask;
     List<String> download=[];
+    if(_formKey.currentState!.validate()){
+       _formKey.currentState?.save();
     for(int i=0;i<fileImag.length;i++){
-     uploadTask=storageReference.child("product_$productid($i).jpg").putFile(File(fileImag[i].path));
-     //var tasksnapshot=await uploadTask;
-     //download.add(await tasksnapshot.ref.getDownloadURL());
+     uploadTask=storageReference.child("product_$_name($i).jpg").putFile(File(fileImag[i].path));
+     var tasksnapshot=await uploadTask;
+     download.add(await tasksnapshot.ref.getDownloadURL());
     }
+    }
+    //print(download);
   return download;
   }
-  saveItemInfo(){
-    String images='sds';
-    // for(int i=0;i<image.length;i++){
-    //   images+='@'+image[i];
-    // }
+  saveItemInfo(List<dynamic>image){
+    if(_formKey.currentState!.validate()){
+       _formKey.currentState?.save();
+      String images='';
+    for(int i=0;i<image.length;i++){
+      images+='@'+image[i];
+    }
+    //print("$_price $_name $_quantity $_category");
     final itemRef=FirebaseFirestore.instance.collection("items");
     itemRef.add(
       { 'product_id':productid,
@@ -397,4 +404,9 @@ class _MyAppState extends State<MyApp> {
     
     .catchError((error) => print("Failed to add user: $error"));
   }
-}
+  setState(() {
+  fileImage.clear();
+  boli=false;
+  });
+    }
+  }
